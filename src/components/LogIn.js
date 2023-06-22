@@ -15,8 +15,6 @@ export default function LogIn(props) {
   function handleAuthorize(evt) {
     evt.preventDefault();
     props.onAuthorize(email, password);
-    setPassword('');
-    setEmail('');
   }
 
   return (
@@ -31,7 +29,7 @@ export default function LogIn(props) {
           onChange={handleEmailChange}
           minLength="6"
           maxLength="30"
-          value={email || ''}
+          value={email}
         />
         <input
           className="form__input"
@@ -41,7 +39,7 @@ export default function LogIn(props) {
           onChange={handlePasswordChange}
           minLength="6"
           maxLength="18"
-          value={password || ''}
+          value={password}
         />
         <button className="entrance__button" type="submit">
           Войти

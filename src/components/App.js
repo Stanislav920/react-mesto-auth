@@ -20,7 +20,7 @@ import ImagePopup from './ImagePopup.js';
 import ConfirmDeletePopup from './ConfirmDeletePopup.js';
 import ProtectedRoute from './ProtectedRoute';
 
-function App(props) {
+function App() {
   const [isEditProfilePopupOpen, setIsEditProfilePopupOpen] = useState(false);
   const [isAddPlacePopupOpen, setIsAddPlacePopupOpen] = useState(false);
   const [isEditAvatarPopupOpen, setIsEditAvatarPopupOpen] = useState(false);
@@ -34,23 +34,27 @@ function App(props) {
   const [email, setEmail] = useState('');
   const [isRegisered, setIsRegitered] = useState(false);
   const [isAuth, setIsAuth] = useState(false);
+  const [err, setErr] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    api
-      .getUserInfo()
-      .then(res => {
-        setCurrentUser(res);
-      })
-      .catch(err => console.error(err));
+    const token = localStorage.getItem('token');
+    if (token) {
+      api
+        .getUserInfo()
+        .then(res => {
+          setCurrentUser(res);
+        })
+        .catch(err => console.error(err));
 
-    api
-      .getInitialCards()
-      .then(res => {
-        setCards(res.map(card => card));
-      })
-      .catch(err => console.error(err));
+      api
+        .getInitialCards()
+        .then(res => {
+          setCards(res.map(card => card));
+        })
+        .catch(err => console.error(err));
+    }
   }, []);
 
   function handleEditAvatarClick() {
@@ -155,22 +159,36 @@ function App(props) {
   }
 
   function handleRegister(email, password) {
-    auth.register(email, password).then(res => {
-      setIsRegitered(!res.error);
-      handleInfoTooltipOpen();
-      navigate('/sign-in');
-    });
+    auth
+      .register(email, password)
+      .then(() => {
+        setErr(false);
+        setIsInfoTooltipOpen(true);
+        handleInfoTooltipOpen();
+        navigate('/sign-in');
+      })
+      .catch(() => {
+        setErr(true);
+        handleInfoTooltipOpen();
+      });
   }
 
   function handleAuthorize(email, password) {
-    auth.authorize(email, password).then(data => {
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        setIsAuth(true);
-        navigate('/');
-        setEmail(email);
-      }
-    });
+    auth
+      .authorize(email, password)
+      .then(data => {
+        if (data.token) {
+          setErr(false);
+          localStorage.setItem('token', data.token);
+          setIsAuth(true);
+          navigate('/');
+          setEmail(email);
+        }
+      })
+      .catch(() => {
+        setErr(true);
+        handleInfoTooltipOpen();
+      });
   }
 
   function handleSingOut() {
@@ -232,6 +250,7 @@ function App(props) {
           isOpen={isInfoTooltipOpen}
           isRegisered={isRegisered}
           onClose={closeAllPopups}
+          status={!err}
         />
       </CurrentUserContext.Provider>
     </div>
